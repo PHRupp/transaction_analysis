@@ -1,22 +1,31 @@
 
+import logging
+import os
 import re
 import traceback as tb
+
+from dataclasses import dataclass
+from datetime import datetime
+from os.path import join
+from typing import List
 
 import numpy as np
 import pandas as pd
 
-from dataclasses import dataclass
-from datetime import datetime
-from typing import List
 
-"""
-PROBLEMS:
-1.) not always a line below (FIXED)
-2.) multiple invoice lines per
-"""
+log_file = './results.log'
+in_file_name = 'HUNTERSCREEK2023.xls'
+out_file_name = 'HC_2023.csv'
 
-f = 'C:/Users/pathr/Downloads/SEPT2024-2025#1.xls'
-df = pd.read_excel(f)
+
+logging.basicConfig(filename=log_file, level=logging.INFO)
+
+
+data_dir = 'G:/My Drive/LBA/Dry Cleaning MLX/HC/Analysis'
+in_file = 'C:/Users/pathr/Downloads/SEPT2024-2025#1.xls'
+#in_file = join(data_dir, in_file_name)
+out_file = join(data_dir, out_file_name)
+df = pd.read_excel(in_file)
 
 # Clean up the file otherwise the weird line skips are annoying
 df.dropna(how='all', inplace=True, ignore_index=True)
@@ -36,7 +45,6 @@ section_row_indices2 = np.where(df[title_col2] == section_invoice_paid)[0]
 section_end_row_indices = np.where(df[run_date_col] == section_end_run_date)[0]
 section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
 section_row_indices.sort()
-print(section_row_indices)
 
 
 data_frames = []
@@ -101,8 +109,7 @@ def parse_section(
                 data.append(data_row)
 
         except Exception as e:
-            #print(tb.format_exc())
-            pass
+            logging.warning(tb.format_exc())
 
         # Move forward a row
         data_row_index += 1
@@ -145,8 +152,7 @@ def is_parsable_transaction(
             success = True
 
     except Exception as e:
-        #print(tb.format_exc())
-        pass
+        logging.warning(tb.format_exc())
 
     return success
 
@@ -214,18 +220,23 @@ def parse_transaction(
     return data_row
 
 
-# process each section (one per day)
-for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
+try:
+    # process each section (one per day)
+    for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
 
-    section_data = parse_section(section_row_index, section_end_row_index, df)
+        section_data = parse_section(section_row_index, section_end_row_index, df)
 
-    new_df = pd.DataFrame([
-        d.__dict__ for d in section_data
-    ])
+        data_frames.append(
+            pd.DataFrame([
+                d.__dict__ for d in section_data
+            ])
+        )
 
-    data_frames.append(new_df)
+    # put all the data together
+    pd.concat(data_frames).to_csv(out_file)
 
-pd.concat(data_frames).to_csv('final_data.csv')
+except Exception as e:
+    logging.warning(tb.format_exc())
 
 
 
