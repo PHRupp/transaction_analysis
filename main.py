@@ -25,10 +25,6 @@ data_dir = 'G:/My Drive/LBA/Dry Cleaning MLX/HC/Analysis'
 in_file = 'C:/Users/pathr/Downloads/SEPT2024-2025#1.xls'
 #in_file = join(data_dir, in_file_name)
 out_file = join(data_dir, out_file_name)
-df = pd.read_excel(in_file)
-
-# Clean up the file otherwise the weird line skips are annoying
-df.dropna(how='all', inplace=True, ignore_index=True)
 
 run_date_col = 'Unnamed: 1'
 title_col1 = 'Unnamed: 6'
@@ -38,13 +34,6 @@ section_invoice_paid = 'Invoice Paid'
 section_end_run_date = 'Run Date'
 
 PHONE_NUMBER_PATTERN = re.compile('\(\d{3}\) \d{3}-\d{4}')
-
-# Some of the data is shifted right
-section_row_indices1 = np.where(df[title_col1] == section_invoice_paid)[0]
-section_row_indices2 = np.where(df[title_col2] == section_invoice_paid)[0]
-section_end_row_indices = np.where(df[run_date_col] == section_end_run_date)[0]
-section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
-section_row_indices.sort()
 
 
 data_frames = []
@@ -61,6 +50,35 @@ class DataRow:
     Amount: str
     CustomerName: str
     PhoneNumber: str
+
+
+def clean_up_data(df: pd.DataFrame) -> pd.DataFrame:
+
+    index_list_to_drop = []
+
+    # Clean up the file otherwise the weird line skips are annoying
+    df.dropna(how='all', inplace=True, ignore_index=True)
+    
+    s1 = "Hunter's Creek"
+    s2 = '3964 Town Center Blvd, Orlando,FL 32837-6103'
+    s3 = 'Invoice Paid'
+    s4 = 'Invoice'
+    s5 = 'Run Date'
+    s6 = 'Dry Cleaning'
+    s7 = 'Account Receivable'
+    s8 = 'Miscellaneous'
+    
+    ind = (s1==df) | (s2==df) | (s3==df) | (s4==df) | (s5==df) | (s6==df) | (s7==df) | (s8==df)
+    
+    # Check each row, if it has one of these strings, drop the row
+    for i in ind.index:
+        if ind.loc[i].sum() > 0:
+            index_list_to_drop.append(i)
+
+    # Drop the rows that contain useless data
+    df.drop(index=index_list_to_drop, inplace=True)
+
+    return df
 
 
 """
@@ -221,6 +239,20 @@ def parse_transaction(
 
 
 try:
+    
+    df = pd.read_excel(in_file)
+
+    # Some of the data is shifted right
+    section_row_indices1 = np.where(df[title_col1] == section_invoice_paid)[0]
+    section_row_indices2 = np.where(df[title_col2] == section_invoice_paid)[0]
+    section_end_row_indices = np.where(df[run_date_col] == section_end_run_date)[0]
+    section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
+    section_row_indices.sort()
+    
+    df = clean_up_data(df)
+    
+    df.to_csv(join(data_dir, 'temp.csv'))
+
     # process each section (one per day)
     for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
 
