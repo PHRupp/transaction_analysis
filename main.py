@@ -55,20 +55,31 @@ class DataRow:
 def clean_up_data(df: pd.DataFrame) -> pd.DataFrame:
 
     index_list_to_drop = []
+    
+    # Remove empty first column
+    df.drop(columns=df.columns[0:1], inplace=True)
 
     # Clean up the file otherwise the weird line skips are annoying
-    df.dropna(how='all', inplace=True, ignore_index=True)
+    df.dropna(axis='index', how='all', inplace=True, ignore_index=True)
     
-    s1 = "Hunter's Creek"
-    s2 = '3964 Town Center Blvd, Orlando,FL 32837-6103'
-    s3 = 'Invoice Paid'
-    s4 = 'Invoice'
-    s5 = 'Run Date'
-    s6 = 'Dry Cleaning'
-    s7 = 'Account Receivable'
-    s8 = 'Miscellaneous'
+    # Collection of strings that represent rows to be removed
+    drop_rows_strings = [
+        "Hunter's Creek",
+        '3964 Town Center Blvd, Orlando,FL 32837-6103',
+        'Invoice Paid',
+        'Invoice',
+        'Run Date',
+        'Dry Cleaning',
+        'Account Receivable',
+        'Miscellaneous',
+        'IAN',
+        'Cash Drawer',
+    ]
     
-    ind = (s1==df) | (s2==df) | (s3==df) | (s4==df) | (s5==df) | (s6==df) | (s7==df) | (s8==df)
+    # Build an index filter for all rows to remove
+    ind = (drop_rows_strings[0] == df)
+    for s in drop_rows_strings[1:]:
+        ind = ind | (s == df)
     
     # Check each row, if it has one of these strings, drop the row
     for i in ind.index:
@@ -77,6 +88,29 @@ def clean_up_data(df: pd.DataFrame) -> pd.DataFrame:
 
     # Drop the rows that contain useless data
     df.drop(index=index_list_to_drop, inplace=True)
+    
+    # The last row is aggregate financials, so drop it
+    # Dropping here instead of adding to index list because it's not the last 
+    # before the filtering above. After the filtering, it is last
+    df.drop(index=df.index[-1], inplace=True)
+    
+    # Some rows have duplicate transaction amount as line above but no date/areacode data
+    df.dropna(axis='index', subset=df.columns[:1], inplace=True, ignore_index=True)
+    
+    # Some rows are shifted right
+    col2_shifted = df[df.columns[1]].isnull()
+    for i in range(1, df.shape[1]-1):
+        i_col = df.columns[i]
+        j_col = df.columns[i+1]
+        #df.loc[col2_shifted, i_col] = df.loc[col2_shifted, j_col]
+
+    # Make the right most column nans to avoid duplication since shifted left
+    #df.loc[col2_shifted, df.columns[-1]] = np.nan
+    
+    # Once all the bad rows are dropped, then we can clean up some of the oddly
+    # shifted columns. Doing this again because columns have now been shifted left.
+    df.dropna(axis='columns', how='all', inplace=True, ignore_index=True)
+    print(df)
 
     return df
 
@@ -93,25 +127,19 @@ def clean_up_data(df: pd.DataFrame) -> pd.DataFrame:
 	9/4/2024	5:34 PM					Debit		A104528	L	6	$30.29 
 	714	244-5456	hache nancy																	
 """
-def parse_section(
-    section_row_index: int,
-    section_end_row_index: int,
+def parse_data(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     data = []
 
     # column names after 'Invoice Paid' row
-    col_names_row_index = section_row_index + 1
-    data_row_index = col_names_row_index + 1
-
-    # parse which columns have the data and grab their names
-    raw_cols = df.iloc[col_names_row_index,:]
-    col_name_indices = np.where(~raw_cols.isna())[0]
+    data_row_index = df.index[0]
     
-    reached_end = False
-
-    # keep parsing each transaction
-    while not reached_end:
+    for data_row_index in range(df.shape[0]):
+    
+        # If last line reached, jump out
+        if data_row_index+1 == df.shape[0]:
+            continue
 
         # Sometimes there are two invoices under one transaction
         # see if it's a date next then skip
@@ -128,13 +156,6 @@ def parse_section(
 
         except Exception as e:
             logging.warning(tb.format_exc())
-
-        # Move forward a row
-        data_row_index += 1
-
-        # Jump out if we reached the end of section
-        if (data_row_index+1) >= section_end_row_index:
-            reached_end = True
 
     return data
 
@@ -253,19 +274,14 @@ try:
     
     df.to_csv(join(data_dir, 'temp.csv'))
 
-    # process each section (one per day)
-    for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
-
-        section_data = parse_section(section_row_index, section_end_row_index, df)
-
-        data_frames.append(
-            pd.DataFrame([
-                d.__dict__ for d in section_data
-            ])
-        )
+    data_rows = parse_data(section_row_index, section_end_row_index, df)
 
     # put all the data together
-    pd.concat(data_frames).to_csv(out_file)
+    data_frames.append(
+        pd.DataFrame([
+            d.__dict__ for d in data_rows
+        ])
+    ).to_csv(out_file)
 
 except Exception as e:
     logging.warning(tb.format_exc())
