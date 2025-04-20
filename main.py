@@ -3,7 +3,7 @@ import logging
 import os
 import traceback as tb
 
-from os.path import join
+from os.path import exists, join
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,8 @@ in_file_name = 'INVOICEREPORT2025-RECENT.xls'
 out_file_name = 'HC_2023.csv'
 
 
+if exists(log_file):
+    os.remove(log_file)
 logging.basicConfig(filename=log_file, level=logging.INFO)
 
 
@@ -42,14 +44,13 @@ try:
     for section_start, section_end in zip(section_ind[0:(n-1)], section_ind[1:n]):
 
         section_data = reduce_section(section_start, section_end, df)
-
-        print('\n\n\n')
-        print(section_data)
-
         data_frames.append(section_data)
 
     # put all the data together
-    pd.concat(data_frames).to_csv(out_file)
+    df = pd.concat(data_frames, ignore_index=True)
+
+
+    df.to_csv(out_file)
 
 except Exception as e:
     logging.warning(tb.format_exc())

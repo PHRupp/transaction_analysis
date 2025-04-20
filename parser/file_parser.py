@@ -90,7 +90,15 @@ def reduce_section(
     reduced_df = df.loc[data_row_index:(section_end_row_index-1), col_index]
     reduced_df.reset_index(drop=True, inplace=True)
     reduced_df.columns = cols.to_list()
-    print(cols.to_list())
+
+    # Drop rows where the date column is empty. other rolumns may have
+    # data, but if date is empty then we should remove the whole row
+    # reduce here because it won't work during the clean up phase.
+    # this is because the 'Invoice Paid' line will have empty date column
+    first_col = reduced_df.columns[0]
+    drop_ind = reduced_df.index[reduced_df[first_col].isna()]
+    reduced_df.drop(index=drop_ind, inplace=True)
+    
     return reduced_df
 
 
