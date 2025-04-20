@@ -10,9 +10,21 @@ import pandas as pd
 
 from parser.data import DataRow
 
-PARTIAL_PHONE_NUMBER_PATTERN = '\d{3}-\d{4}'
+PARTIAL_PHONE_NUMBER_PATTERN = '^\d{3}-\d{4}$'
 PHONE_NUMBER_PATTERN = re.compile('\(\d{3}\) \d{3}-\d{4}')
 TIME_FORMAT_12HR = "%I:%M %p" #"02:30 PM"
+
+
+def is_partial_phone_number_format(phone_s: str) -> bool:
+    is_phone_number: bool = False
+    try:
+        match = re.search(PARTIAL_PHONE_NUMBER_PATTERN, phone_s)
+        if match is not None:
+            is_phone_number = True
+    except Exception as e:
+        #logging.warning(tb.format_exc())
+        pass
+    return is_phone_number
 
 
 def is_time_format(time_s: str) -> bool:
@@ -105,6 +117,7 @@ def reduce_section(
     reduced_df.columns = cols.to_list()
 
     # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
+    # This should be run before we further filter out rows in reduced_df
     reduced_df['Name'] = ''
     col_shifted_ind = reduced_df['Time'].str.contains(PARTIAL_PHONE_NUMBER_PATTERN)
     if col_shifted_ind.sum() > 0:
@@ -112,11 +125,16 @@ def reduce_section(
     else:
 
         # Otherwise, the time column has the names, parse the names out if doesn't match time format
-        reduced_df['Name'] = [
-            val if not is_time_format(val) else None
-            for val in reduced_df['Time']
-        ]
-
+        # Shift the phone number out of date column and into time column to be consistent
+        for i in reduced_df.index:
+            date_val = reduced_df.loc[i, 'Date']
+            time_val = reduced_df.loc[i, 'Time']
+            is_time: bool = is_time_format(time_val)
+            is_phone: bool = is_partial_phone_number_format(date_val)
+            reduced_df.loc[i, 'Name'] = None if is_time else time_val
+            reduced_df.loc[i, 'Date'] = '000' if is_phone else date_val #not valid area-code, prevents filtering when date column is empty
+            reduced_df.loc[i, 'Time'] = time_val if is_time else (date_val if is_phone else None)
+        
     # Drop rows where the date column is empty. other rolumns may have
     # data, but if date is empty then we should remove the whole row
     # reduce here because it won't work during the clean up phase.
