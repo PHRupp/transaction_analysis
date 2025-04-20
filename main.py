@@ -38,7 +38,6 @@ data_frames = []
 section_ind = df.index[(df == 'Invoice Paid').sum(axis=1) > 0]
 n = len(section_ind)
 
-
 try:
     # process each section (one per day roughly)
     for section_start, section_end in zip(section_ind[0:(n-1)], section_ind[1:n]):
@@ -49,8 +48,7 @@ try:
     # put all the data together
     df = pd.concat(data_frames, ignore_index=True)
 
-
-    df.to_csv(out_file)
+    df.to_csv(out_file, index=False)
 
 except Exception as e:
     logging.warning(tb.format_exc())

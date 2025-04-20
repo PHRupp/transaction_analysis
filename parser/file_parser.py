@@ -10,7 +10,20 @@ import pandas as pd
 
 from parser.data import DataRow
 
+PARTIAL_PHONE_NUMBER_PATTERN = '\d{3}-\d{4}'
 PHONE_NUMBER_PATTERN = re.compile('\(\d{3}\) \d{3}-\d{4}')
+TIME_FORMAT_12HR = "%I:%M %p" #"02:30 PM"
+
+
+def is_time_format(time_s: str) -> bool:
+    is_time: bool = False
+    try:
+        d = datetime.strptime(time_s, TIME_FORMAT_12HR)
+        is_time = True
+    except Exception as e:
+        #logging.warning(tb.format_exc())
+        pass
+    return is_time
 
 
 def remove_rows(df: pd.DataFrame, drop_strings: List[str], columns: List[Any]) -> pd.DataFrame:
@@ -90,6 +103,19 @@ def reduce_section(
     reduced_df = df.loc[data_row_index:(section_end_row_index-1), col_index]
     reduced_df.reset_index(drop=True, inplace=True)
     reduced_df.columns = cols.to_list()
+
+    # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
+    reduced_df['Name'] = ''
+    col_shifted_ind = reduced_df['Time'].str.contains(PARTIAL_PHONE_NUMBER_PATTERN)
+    if col_shifted_ind.sum() > 0:
+        reduced_df['Name'] = df.loc[data_row_index:(section_end_row_index-1), 3].to_list()
+    else:
+
+        # Otherwise, the time column has the names, parse the names out if doesn't match time format
+        reduced_df['Name'] = [
+            val if not is_time_format(val) else None
+            for val in reduced_df['Time']
+        ]
 
     # Drop rows where the date column is empty. other rolumns may have
     # data, but if date is empty then we should remove the whole row
