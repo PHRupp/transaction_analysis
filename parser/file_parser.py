@@ -2,6 +2,7 @@
 import logging
 import re
 import traceback as tb
+from dataclasses import asdict
 from datetime import datetime
 from typing import Any, List
 
@@ -146,74 +147,27 @@ def reduce_section(
     return reduced_df
 
 
-def parse_reduced_df(df: pd.DataFrame):
+def parse_reduced_df(df: pd.DataFrame) -> pd.DataFrame:
 
-    reached_end = False
+    data: List[DataRow] = []
 
-    # keep parsing each transaction
-    while not reached_end:
+    # Loop through all names and process their transactions
+    name_ind = df.index[df['Name'].notna()].to_list()
+    for i_name, i_next_name in zip(name_ind, name_ind[1:] + [df.index.to_list()[-1]+1]):
 
-        # Sometimes there are two invoices under one transaction
-        # see if it's a date next then skip
-        """
-        9/4/2024	11:12 AM					Debit		A95917	D	2	$0.00 
-        9/4/2024	11:12 AM					Debit		A104416	D	1	$0.00 
-        954	849-5156	GOLDSMITH JOHN									
-        """
-        try:
-            # skip line, this may happen if a transaction is not parsable
-            if is_parsable_transaction(data_row_index, col_name_indices, df):
-                data_row = parse_transaction(data_row_index, col_name_indices, df)
+        # Loop through each transaction under name and process
+        for i_transaction in range(i_name+1,i_next_name):
+            try:
+                data_row = parse_transaction(i_name, i_transaction, df)
                 data.append(data_row)
 
-        except Exception as e:
-            logging.warning(tb.format_exc())
+            except Exception as e:
+                logging.warning(tb.format_exc())
 
-        # Move forward a row
-        data_row_index += 1
-
-        # Jump out if we reached the end of section
-        if (data_row_index+1) >= section_end_row_index:
-            reached_end = True
+    # Recombine into final data frame
+    data = pd.DataFrame([asdict(d) for d in data])
 
     return data
-
-
-"""
-Example Transaction:
-	Date	Time					FoP		    Invoice	Type	Qty	Amount
-9/3/2024	8:47 AM					Debit		A103844	   L	  4	$23.96 
-407	937-9448	PORCELLA STEFANO									
-"""
-def is_parsable_transaction(
-    data_row_index: int,
-    col_name_indices: List[int],
-    df: pd.DataFrame,
-) -> bool:
-
-    success = False
-
-    try:
-        # Verify line 1 starts with a valid date
-        area_code_index = col_name_indices[0]
-        area_code = df.iat[data_row_index, area_code_index]
-        date = datetime.strptime(area_code, "%m/%d/%Y")
-
-        # Verify the phone number is parsable
-        area_code_index = col_name_indices[0]
-        area_code = df.iat[data_row_index+1, area_code_index]
-        other_phone_digits = df.iat[data_row_index+1, area_code_index+1]
-        phone_number = f'({area_code}) {other_phone_digits}'
-
-        match = PHONE_NUMBER_PATTERN.search(phone_number)
-
-        if match is not None:
-            success = True
-
-    except Exception as e:
-        logging.warning(tb.format_exc())
-
-    return success
 
 
 """
@@ -222,57 +176,26 @@ Example Transaction:
 407	937-9448	PORCELLA STEFANO									
 """
 def parse_transaction(
-    data_row_index: int,
-    col_name_indices: List[int],
+    name_index: int,
+    transaction_index: int,
     df: pd.DataFrame,
 ) -> DataRow:
 
     # Parse the phone number
-    area_code_index = col_name_indices[0]
-    area_code = df.iat[data_row_index+1, area_code_index]
-    other_phone_digits = df.iat[data_row_index+1, area_code_index+1]
+    area_code = df.loc[name_index, 'Date']
+    other_phone_digits = df.loc[name_index, 'Time']
     phone_number = f'({area_code}) {other_phone_digits}'
-
-    # Parse date/time
-    date_index = col_name_indices[0]
-    time_index = col_name_indices[1]
-    date = df.iat[data_row_index, date_index]
-    time = df.iat[data_row_index, time_index]
-
-    # Parse name
-    name_index = time_index + 1
-    name = df.iat[data_row_index+1, name_index]
-
-    # Parse the FoP
-    fop_index = col_name_indices[2]
-    fop = df.iat[data_row_index, fop_index]
-
-    # Parse the Invoice number
-    invoice_index = col_name_indices[3]
-    invoice = df.iat[data_row_index, invoice_index]
-
-    # Parse the type
-    transaction_type_index = col_name_indices[4]
-    transaction_type = df.iat[data_row_index, transaction_type_index]
-
-    # Parse the quantity
-    qty_index = col_name_indices[5]
-    qty = int(df.iat[data_row_index, qty_index])
-
-    # Parse the amount
-    amount_index = col_name_indices[6]
-    amount = df.iat[data_row_index, amount_index]
 
     # return the data record
     data_row = DataRow(
-        Date=date,
-        Time=time,
-        FoP=fop,
-        Invoice=invoice,
-        TransactionType=transaction_type,
-        Qty=qty,
-        Amount=amount,
-        CustomerName=name,
+        Date=df.loc[transaction_index, 'Date'],
+        Time=df.loc[transaction_index, 'Time'],
+        FoP=df.loc[transaction_index, 'FoP'],
+        Invoice=df.loc[transaction_index, 'Invoice'],
+        TransactionType=df.loc[transaction_index, 'Type'],
+        Qty=int(df.loc[transaction_index, 'Qty']),
+        Amount=df.loc[transaction_index, 'Amount'],
+        CustomerName=df.loc[name_index, 'Name'],
         PhoneNumber=phone_number,
     )
     

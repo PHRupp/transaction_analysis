@@ -8,8 +8,7 @@ from os.path import exists, join
 import numpy as np
 import pandas as pd
 
-from parser.file_parser import clean_up, reduce_section
-from parser.data import DataRow
+from parser.file_parser import clean_up, parse_reduced_df, reduce_section
 
 
 #data_dir = 'G:/My Drive/LBA/Dry Cleaning MLX/HC/Analysis'
@@ -48,7 +47,10 @@ try:
     # put all the data together
     df = pd.concat(data_frames, ignore_index=True)
 
+    # Get the final dataframe
+    df = parse_reduced_df(df)
+
     df.to_csv(out_file, index=False)
 
 except Exception as e:
-    logging.warning(tb.format_exc())
+    logging.critical(tb.format_exc())
