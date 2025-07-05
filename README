@@ -1,3 +1,4 @@
 
-f = 'C:/Users/pathr/Downloads/SEPT2024-2025#1.xls'
-df = openpyxl.load_workbook(f)
+problem found where names are to the right of the time column.
+
+If we don't look there, then we won't have all the names.
