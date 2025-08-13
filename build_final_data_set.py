@@ -4,13 +4,10 @@ import os
 import traceback as tb
 
 from os.path import join
-from typing import List
 
-import numpy as np
 import pandas as pd
 
 from parser.transaction_parser import parse_reduced_df
-from parser.data import DataRow
 
 """
 WARNING: Processing XLSX files instead of the XLS provides more data. Not sure why, but it 
