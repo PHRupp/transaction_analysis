@@ -21,10 +21,19 @@ some of the files have overlapping transactions where order matters to combine t
 """
 
 in_file_names = [
+    '2018Q1234.xlsx',
+    '2019Q1234.xlsx',
+    '2020Q12.xlsx',
+    '2020Q34.xlsx',
+    '2021Q12.xlsx',
+    '2021Q34.xlsx',
+    '2022Q12.xlsx',
+    '2022Q34.xlsx',
     '2023Q12.xlsx',
     '2023Q34.xlsx',
-    #'2024Q12.xlsx',
+    '2024Q12.xlsx',
     '2024Q34.xlsx',
+    '2025Q12.xlsx',
 ]
 
 

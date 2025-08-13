@@ -72,8 +72,9 @@ def reduce_section(
     reduced_df.drop(index=drop_ind, inplace=True)
 
     # Remove lines representing the person who grabbed the data
-    ind_delete = reduced_df['Date'] == 'IAN'
-    reduced_df.drop(reduced_df.loc[ind_delete,:].index, inplace=True)
+    for name in ['IAN', 'NANDY', 'NANDANIE', 'Shashank']:
+        ind_delete = reduced_df['Date'] == name
+        reduced_df.drop(reduced_df.loc[ind_delete,:].index, inplace=True)
 
     # Data where row has 'Dry Cleaning' and everything after should be destroyed
     is_end = reduced_df['Date'] == 'Dry Cleaning'
