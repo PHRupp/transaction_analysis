@@ -6,7 +6,6 @@ import traceback as tb
 from os.path import join
 from typing import List
 
-import numpy as np
 import pandas as pd
 
 from parser.file_reduce import reduce_file
@@ -34,6 +33,7 @@ in_file_names = [
     '2024Q12.xlsx',
     '2024Q34.xlsx',
     '2025Q12.xlsx',
+    '2025Q3_incomplete.xlsx',
 ]
 
 
