@@ -35,6 +35,6 @@ logging.basicConfig(filename=log_file, level=logging.INFO)
 try:
     data = pd.read_csv(in_file)
     data = parse_reduced_df(data)
-    data.to_csv(out_file)
+    data.to_csv(out_file, index=False)
 except Exception as e:
     logging.error(tb.format_exc())

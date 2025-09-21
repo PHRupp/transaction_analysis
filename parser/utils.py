@@ -9,7 +9,14 @@ run_date_col = 'Unnamed: 1'
 title_col1 = 'Unnamed: 6'
 title_col2 = 'Unnamed: 7'
 section_title = "Hunter's Creek"
+section_invoice_in = 'Invoice In Report'
 section_invoice_paid = 'Invoice Paid'
+section_invoice = {
+    'in': section_invoice_in,
+    'ready': section_invoice_paid,
+    'pickup': section_invoice_paid,
+    'paid': section_invoice_paid,
+}
 section_end_run_date = 'Run Date'
 
 PARTIAL_PHONE_NUMBER_PATTERN = '^\d{3}-\d{4}$'

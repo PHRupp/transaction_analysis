@@ -86,22 +86,24 @@ def reduce_section(
     return reduced_df
 
 
-def reduce_file(in_file: str) -> List[pd.DataFrame]:
+def reduce_file(in_file: str, dataset: str = 'paid') -> List[pd.DataFrame]:
     
     data_frames: List[pd.DataFrame] = []
 
     raw_df = pd.read_excel(in_file)
-
+    
     # Clean up the file otherwise the weird line skips are annoying
     raw_df.dropna(how='all', inplace=True, ignore_index=True)
 
+    section = section_invoice[dataset]
+
     # Some of the data is shifted right
-    section_row_indices1 = np.where(raw_df[title_col1] == section_invoice_paid)[0]
-    section_row_indices2 = np.where(raw_df[title_col2] == section_invoice_paid)[0]
+    section_row_indices1 = np.where(raw_df[title_col1] == section)[0]
+    section_row_indices2 = np.where(raw_df[title_col2] == section)[0]
     section_end_row_indices = np.where(raw_df[run_date_col] == section_end_run_date)[0]
     section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
     section_row_indices.sort()
-
+    
     # process each section (one per day)
     for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
         try:
