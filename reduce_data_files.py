@@ -1,38 +1,50 @@
 
 import logging
 import os
-import re
 import traceback as tb
 
 from os.path import join
 from typing import List
 
-import numpy as np
 import pandas as pd
 
-from parser.file_parser import reduce_file
+from parser.file_reduce import reduce_file
 from parser.data import DataRow
 
 """
 WARNING: Processing XLSX files instead of the XLS provides more data. Not sure why, but it 
 parses the XLS and has missing area codes or phone numbers, but it's fully populated in XLSX.
+
+Also, Files must be in order of time from earliest top to more recent bottom. This is because
+some of the files have overlapping transactions where order matters to combine them.
 """
 
 in_file_names = [
+    '2018Q1234.xlsx',
+    '2019Q1234.xlsx',
+    '2020Q12.xlsx',
+    '2020Q34.xlsx',
+    '2021Q12.xlsx',
+    '2021Q34.xlsx',
+    '2022Q12.xlsx',
+    '2022Q34.xlsx',
     '2023Q12.xlsx',
     '2023Q34.xlsx',
     '2024Q12.xlsx',
     '2024Q34.xlsx',
+    '2025Q12.xlsx',
+    '2025Q3_incomplete.xlsx',
 ]
 
 
 data_dir = 'G:/My Drive/LBA/MLX Admin/HC/Analysis/6mo Data Sets'
-log_file = './results.log'
+log_file = './logs/reduced_results.log'
 out_file_name = 'HC.csv'
 
 try:
-    os.remove(log_file)
-except FileNotFoundError:
+    if os.path.exists(log_file):
+        os.remove(log_file)
+except Exception as e:
     print(tb.format_exc())
 
 out_file = join(data_dir, out_file_name)
