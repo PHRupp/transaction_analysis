@@ -41,12 +41,21 @@ def reduce_section(
     reduced_df.reset_index(drop=True, inplace=True)
     reduced_df.columns = cols.to_list()
 
+    # Change the invoice column values to NaN if it doesn't follow the Invoice Regex pattern
+    inv_col = 'Invoice' if 'Invoice' in cols.values else 'Inv #'
+    is_inv = reduced_df[inv_col].str.contains(INVOICE_PATTERN).to_list()
+    inv_convert = {True: False, False: True, np.nan: False}
+    is_inv = [inv_convert[l] for l in is_inv]
+    reduced_df.loc[is_inv, inv_col] = np.nan
+
     # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
     # This should be run before we further filter out rows in reduced_df
     reduced_df['Name'] = ''
     col_shifted_ind = reduced_df['Time'].str.contains(PARTIAL_PHONE_NUMBER_PATTERN)
     if col_shifted_ind.sum() > 0:
-        reduced_df['Name'] = df.loc[data_row_index:(section_end_row_index-1), 'Unnamed: 3'].to_list()
+        name_rows_ind = col_shifted_ind.to_list()
+        names = df.loc[data_row_index:(section_end_row_index-1), 'Unnamed: 3']
+        reduced_df.loc[name_rows_ind, 'Name'] = names[name_rows_ind].to_list()
     else:
 
         # Otherwise, the time column has the names, parse the names out if doesn't match time format
@@ -72,7 +81,7 @@ def reduce_section(
     reduced_df.drop(index=drop_ind, inplace=True)
 
     # Remove lines representing the person who grabbed the data
-    for name in ['IAN', 'NANDY', 'NANDANIE', 'Shashank']:
+    for name in ['IAN', 'NANDY', 'NANDANIE', 'Shashank', 'Total All']:
         ind_delete = reduced_df['Date'] == name
         reduced_df.drop(reduced_df.loc[ind_delete,:].index, inplace=True)
 
@@ -93,6 +102,7 @@ def reduce_file(in_file: str, dataset: str = 'paid') -> List[pd.DataFrame]:
     raw_df = pd.read_excel(in_file)
     
     # Clean up the file otherwise the weird line skips are annoying
+    # remove lines that are empty
     raw_df.dropna(how='all', inplace=True, ignore_index=True)
 
     section = section_invoice[dataset]
@@ -103,7 +113,7 @@ def reduce_file(in_file: str, dataset: str = 'paid') -> List[pd.DataFrame]:
     section_end_row_indices = np.where(raw_df[run_date_col] == section_end_run_date)[0]
     section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
     section_row_indices.sort()
-    
+
     # process each section (one per day)
     for section_row_index, section_end_row_index in zip(section_row_indices, section_end_row_indices):
         try:

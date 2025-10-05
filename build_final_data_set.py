@@ -7,23 +7,15 @@ from os.path import join
 
 import pandas as pd
 
-from parser.transaction_parser import parse_reduced_df
-
-"""
-WARNING: Processing XLSX files instead of the XLS provides more data. Not sure why, but it 
-parses the XLS and has missing area codes or phone numbers, but it's fully populated in XLSX.
-
-Also, Files must be in order of time from earliest top to more recent bottom. This is because
-some of the files have overlapping transactions where order matters to combine them.
-"""
-
-in_file_name = 'HC.csv'
+in_file_name = 'HC_%s_final.csv'
 out_file_name = 'HC_final.csv'
 
 data_dir = 'G:/My Drive/LBA/MLX Admin/HC/Analysis/6mo Data Sets'
-log_file = './logs/final_results.log'
+log_file = './logs/build_final_results.log'
 
-in_file = join(data_dir, in_file_name)
+in_data_file = join(data_dir, in_file_name % 'in')
+paid_data_file = join(data_dir, in_file_name % 'paid')
+pickup_data_file = join(data_dir, in_file_name % 'pickup')
 out_file = join(data_dir, out_file_name)
 
 # Remove the log file
@@ -33,8 +25,14 @@ if os.path.exists(log_file):
 logging.basicConfig(filename=log_file, level=logging.INFO)
 
 try:
-    data = pd.read_csv(in_file)
-    data = parse_reduced_df(data)
-    data.to_csv(out_file, index=False)
+    data_in = pd.read_csv(in_data_file)
+    data_paid = pd.read_csv(paid_data_file)
+    data_pickup = pd.read_csv(pickup_data_file)
+    data_final = pd.merge(data_in, data_paid, on='Invoice', how='outer', suffixes=('In', 'Paid'))
+    data_final['DateTimeIn'] = pd.to_datetime(data_final['DateIn'] + " " + data_final['TimeIn'])
+    data_final.sort_values(by=['DateTimeIn'], inplace=True)
+    print(data_final)
+    print(data_final.dtypes)
+    data_final.to_csv(out_file, index=False)
 except Exception as e:
     logging.error(tb.format_exc())
