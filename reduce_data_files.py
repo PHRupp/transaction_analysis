@@ -18,7 +18,7 @@ Also, Files must be in order of time from earliest top to more recent bottom. Th
 some of the files have overlapping transactions where order matters to combine them.
 """
 
-dataset = 'pickup'  # in, ready, paid, pickup
+dataset = 'paid'  # in, ready, paid, pickup
 data_dir = 'G:/My Drive/LBA/MLX Admin/HC/Analysis/6mo Data Sets'
 log_file = './logs/reduced_results.log'
 out_file_name = 'HC_%s.csv' % dataset

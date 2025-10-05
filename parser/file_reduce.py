@@ -55,6 +55,7 @@ def reduce_section(
     if col_shifted_ind.sum() > 0:
         name_rows_ind = col_shifted_ind.to_list()
         names = df.loc[data_row_index:(section_end_row_index-1), 'Unnamed: 3']
+        name_rows_ind = [False if np.isnan(l) else l for l in name_rows_ind]
         reduced_df.loc[name_rows_ind, 'Name'] = names[name_rows_ind].to_list()
     else:
 
@@ -72,7 +73,7 @@ def reduce_section(
     # keep the strings consistent by having upper case
     reduced_df['Name'] = reduced_df['Name'].str.upper()
 
-    # Drop rows where the date column is empty. other rolumns may have
+    # Drop rows where the date column is empty. other columns may have
     # data, but if date is empty then we should remove the whole row
     # reduce here because it won't work during the clean up phase.
     # this is because the 'Invoice Paid' line will have empty date column
