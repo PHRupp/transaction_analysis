@@ -29,12 +29,12 @@ def parse_transaction_in(
 
     # return the data record
     data_row = DataRowIn(
-        Date=df.loc[transaction_index, 'Date'],
-        Time=df.loc[transaction_index, 'Time'],
+        DateIn=df.loc[transaction_index, 'Date'],
+        TimeIn=df.loc[transaction_index, 'Time'],
         Invoice=df.loc[transaction_index, 'Inv #'],
         TransactionType=df.loc[transaction_index, 'Type'],
-        Qty=int(df.loc[transaction_index, 'Qty']),
-        Amount=df.loc[transaction_index, 'Amount'],
+        QtyIn=int(df.loc[transaction_index, 'Qty']),
+        AmountIn=df.loc[transaction_index, 'Amount'],
         CustomerName=df.loc[name_index, 'Name'],
         PhoneNumber=phone_number,
     )
@@ -62,13 +62,13 @@ def parse_transaction_paid(
 
     # return the data record
     data_row = DataRowPaid(
-        Date=df.loc[transaction_index, 'Date'],
-        Time=df.loc[transaction_index, 'Time'],
+        DatePaid=df.loc[transaction_index, 'Date'],
+        TimePaid=df.loc[transaction_index, 'Time'],
         FoP=df.loc[transaction_index, 'FoP'],
         Invoice=df.loc[transaction_index, 'Invoice'],
         TransactionType=df.loc[transaction_index, 'Type'],
-        Qty=int(df.loc[transaction_index, 'Qty']),
-        Amount=df.loc[transaction_index, 'Amount'],
+        QtyPaid=int(df.loc[transaction_index, 'Qty']),
+        AmountPaid=df.loc[transaction_index, 'Amount'],
         CustomerName=df.loc[name_index, 'Name'],
         PhoneNumber=phone_number,
     )
@@ -96,13 +96,13 @@ def parse_transaction_pickup(
 
     # return the data record
     data_row = DataRowPickup(
-        Date=df.loc[transaction_index, 'Date'],
-        Time=df.loc[transaction_index, 'Time'],
+        DatePickup=df.loc[transaction_index, 'Date'],
+        TimePickup=df.loc[transaction_index, 'Time'],
         FoP=df.loc[transaction_index, 'FoP'],
         Invoice=df.loc[transaction_index, 'Invoice'],
         TransactionType=df.loc[transaction_index, 'Type'],
-        Qty=int(df.loc[transaction_index, 'Qty']),
-        Amount=df.loc[transaction_index, 'Amount'],
+        QtyPickup=int(df.loc[transaction_index, 'Qty']),
+        AmountPickup=df.loc[transaction_index, 'Amount'],
         CustomerName=df.loc[name_index, 'Name'],
         PhoneNumber=phone_number,
     )

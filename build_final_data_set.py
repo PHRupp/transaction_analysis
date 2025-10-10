@@ -29,6 +29,7 @@ try:
     data_paid = pd.read_csv(paid_data_file)
     data_pickup = pd.read_csv(pickup_data_file)
     data_final = pd.merge(data_in, data_paid, on='Invoice', how='outer', suffixes=('In', 'Paid'))
+    data_final = pd.merge(data_final, data_pickup, on='Invoice', how='outer', suffixes=('', 'Pickup'))
     data_final['DateTimeIn'] = pd.to_datetime(data_final['DateIn'] + " " + data_final['TimeIn'])
     data_final.sort_values(by=['DateTimeIn'], inplace=True)
     print(data_final)
