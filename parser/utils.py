@@ -20,8 +20,10 @@ section_invoice = {
 section_end_run_date = 'Run Date'
 
 INVOICE_PATTERN = '^A\d+$'
+AREA_CODE_PATTERN = '^(\(\d{3}\))'
 PARTIAL_PHONE_NUMBER_PATTERN = '^\d{3}-\d{4}$'
 PHONE_NUMBER_PATTERN = re.compile('\(\d{3}\) \d{3}-\d{4}')
+PHONE_NUMBER_PATTERN_ONLY = re.compile('^\(\d{3}\) (\d{3}-\d{4}$)')
 TIME_FORMAT_12HR = "%I:%M %p" #"02:30 PM"
 
 
