@@ -32,11 +32,11 @@ def parse_transaction_in(
         DateIn=df.loc[transaction_index, 'Date'],
         TimeIn=df.loc[transaction_index, 'Time'],
         Invoice=df.loc[transaction_index, 'Inv #'],
-        TransactionType=df.loc[transaction_index, 'Type'],
+        TransactionTypeIn=df.loc[transaction_index, 'Type'],
         QtyIn=int(df.loc[transaction_index, 'Qty']),
         AmountIn=df.loc[transaction_index, 'Amount'],
-        CustomerName=df.loc[name_index, 'Name'],
-        PhoneNumber=phone_number,
+        CustomerNameIn=df.loc[name_index, 'Name'],
+        PhoneNumberIn=phone_number,
     )
     return data_row
 
@@ -64,13 +64,13 @@ def parse_transaction_paid(
     data_row = DataRowPaid(
         DatePaid=df.loc[transaction_index, 'Date'],
         TimePaid=df.loc[transaction_index, 'Time'],
-        FoP=df.loc[transaction_index, 'FoP'],
+        FoPPaid=df.loc[transaction_index, 'FoP'],
         Invoice=df.loc[transaction_index, 'Invoice'],
-        TransactionType=df.loc[transaction_index, 'Type'],
+        TransactionTypePaid=df.loc[transaction_index, 'Type'],
         QtyPaid=int(df.loc[transaction_index, 'Qty']),
         AmountPaid=df.loc[transaction_index, 'Amount'],
-        CustomerName=df.loc[name_index, 'Name'],
-        PhoneNumber=phone_number,
+        CustomerNamePaid=df.loc[name_index, 'Name'],
+        PhoneNumberPaid=phone_number,
     )
     return data_row
 
@@ -98,13 +98,13 @@ def parse_transaction_pickup(
     data_row = DataRowPickup(
         DatePickup=df.loc[transaction_index, 'Date'],
         TimePickup=df.loc[transaction_index, 'Time'],
-        FoP=df.loc[transaction_index, 'FoP'],
+        FoPPickup=df.loc[transaction_index, 'FoP'],
         Invoice=df.loc[transaction_index, 'Invoice'],
-        TransactionType=df.loc[transaction_index, 'Type'],
+        TransactionTypePickup=df.loc[transaction_index, 'Type'],
         QtyPickup=int(df.loc[transaction_index, 'Qty']),
         AmountPickup=df.loc[transaction_index, 'Amount'],
-        CustomerName=df.loc[name_index, 'Name'],
-        PhoneNumber=phone_number,
+        CustomerNamePickup=df.loc[name_index, 'Name'],
+        PhoneNumberPickup=phone_number,
     )
     return data_row
 

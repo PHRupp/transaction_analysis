@@ -6,44 +6,44 @@ class DataRowIn:
     DateIn: str
     TimeIn: str
     Invoice: str
-    TransactionType: str
+    TransactionTypeIn: str
     QtyIn: int
     AmountIn: str
-    CustomerName: str
-    PhoneNumber: str
+    CustomerNameIn: str
+    PhoneNumberIn: str
 
 @dataclass
 class DataRowReady:
     DateReady: str
     TimeReady: str
-    FoP: str
+    FoPReady: str
     Invoice: str
-    TransactionType: str
+    TransactionTypeReady: str
     QtyReady: int
     AmountReady: str
-    CustomerName: str
-    PhoneNumber: str
+    CustomerNameReady: str
+    PhoneNumberReady: str
 
 @dataclass
 class DataRowPaid:
     DatePaid: str
     TimePaid: str
-    FoP: str
+    FoPPaid: str
     Invoice: str
-    TransactionType: str
+    TransactionTypePaid: str
     QtyPaid: int
     AmountPaid: str
-    CustomerName: str
-    PhoneNumber: str
+    CustomerNamePaid: str
+    PhoneNumberPaid: str
 
 @dataclass
 class DataRowPickup:
     DatePickup: str
     TimePickup: str
-    FoP: str
+    FoPPickup: str
     Invoice: str
-    TransactionType: str
+    TransactionTypePickup: str
     QtyPickup: int
     AmountPickup: str
-    CustomerName: str
-    PhoneNumber: str
+    CustomerNamePickup: str
+    PhoneNumberPickup: str

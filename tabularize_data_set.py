@@ -17,7 +17,7 @@ Also, Files must be in order of time from earliest top to more recent bottom. Th
 some of the files have overlapping transactions where order matters to combine them.
 """
 
-dataset = 'in'  # in, ready, paid, pickup
+dataset = 'pickup'  # in, ready, paid, pickup
 in_file_name = 'HC_%s.csv' % dataset
 out_file_name = 'HC_%s_final.csv' % dataset
 

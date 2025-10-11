@@ -66,7 +66,7 @@ def fix_phone_number(phone_numbers: List[str]) -> str:
 
     # Combine the new phone and check to make sure it's valid
     new_phone = area_code + " " + phone_without_area_code
-    if (not new_phone == "(000) 000-0000") and not is_phone_missing_area_code(new_phone):
+    if not is_phone_missing_area_code(new_phone) and not "000-0000" in new_phone:
         return new_phone
 
     return phone
@@ -105,7 +105,7 @@ def get_unique_customer_phone(df: pd.DataFrame) -> pd.DataFrame:
 try:
     data_in = pd.read_csv(in_file)
     data_out = get_unique_customer_phone(data_in)
-    data_out.sort_values(by='Name')
+    data_out.sort_values(by='Name', inplace=True)
     print(data_out)
     data_out.to_csv(out_file, index=False)
 except Exception as e:
