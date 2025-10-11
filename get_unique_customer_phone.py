@@ -3,8 +3,8 @@ import logging
 import os
 import re
 import traceback as tb
-
 from os.path import join
+from typing import List
 
 import pandas as pd
 import numpy as np
@@ -33,27 +33,14 @@ def is_phone_missing_area_code(ph: str) -> bool:
     return '(000)' in ph
 
 
-def is_valid_area_code_nan(ph: str) -> bool:
-    return (' nan' not in ph) and is_phone_missing_area_code(ph)
-
-
-def is_nan(ph: str) -> bool:
-    return ph is None
-
-
 def is_valid_phone(ph: str) -> bool:
     if not type(ph) == str:
         ph = ''
     return (re.match(PHONE_NUMBER_PATTERN_ONLY, ph) is not None) and (not is_phone_missing_area_code(ph))
 
 
-def fix_phone_number(row) -> str:
+def fix_phone_number(phone_numbers: List[str]) -> str:
     phone = None
-    ph1 = row['PhoneNumberIn']
-    ph2 = row['PhoneNumberPaid']
-    ph3 = row['PhoneNumber']
-
-    phone_numbers = [ph1, ph2, ph3]
     phone_numbers = [p for p in phone_numbers if p is not None]
     phone_numbers = [p for p in phone_numbers if type(p) == str]
 
@@ -86,6 +73,7 @@ def fix_phone_number(row) -> str:
 
 
 def get_unique_customer_phone(df: pd.DataFrame) -> pd.DataFrame:
+    data_out = []
     keep_cols = [
         'CustomerNameIn', 'PhoneNumberIn',
         'CustomerNamePaid', 'PhoneNumberPaid',
@@ -100,17 +88,25 @@ def get_unique_customer_phone(df: pd.DataFrame) -> pd.DataFrame:
     customer_na = df['Customer'].isna().to_list()
     df.loc[customer_na, 'Customer'] = df.loc[customer_na, 'CustomerName']
 
-    # Fill in the phone number
-    df.loc[:,'Phone'] = df.apply(fix_phone_number, axis=1)
+    # 
+    for name in df['Customer'].unique():
+        name_ind = (df['Customer'] == name)
+        phones_in = df.loc[name_ind, 'PhoneNumberIn'].to_list()
+        phones_paid = df.loc[name_ind, 'PhoneNumberPaid'].to_list()
+        phones = df.loc[name_ind, 'PhoneNumber'].to_list()
+        all_phones = phones_in + phones_paid + phones
+        phone = fix_phone_number(all_phones)
+        if phone is not None:
+            data_out.append([name, phone])
 
-    return df
+    return pd.DataFrame(data_out, columns=['Name', 'Phone'])
 
 
 try:
     data_in = pd.read_csv(in_file)
     data_out = get_unique_customer_phone(data_in)
-    data_out = data_out[['Customer', 'Phone']].drop_duplicates()
-    print(data_out['Phone'].isnull().sum())
+    data_out.sort_values(by='Name')
+    print(data_out)
     data_out.to_csv(out_file, index=False)
 except Exception as e:
     logging.error(tb.format_exc())
