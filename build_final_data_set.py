@@ -108,7 +108,6 @@ try:
 
     print(data_final.dtypes)
     print(data_final)
-    exit(0)
 
     # print data to file
     data_final.to_csv(out_file, index=False)
