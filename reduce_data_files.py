@@ -27,22 +27,22 @@ in_file_names = []
 
 if dataset == 'in':
     in_file_names = [
-        '2018Q12_in.xlsx',
-        '2018Q34_in.xlsx',
-        '2019Q12_in.xlsx',
-        '2019Q34_in.xlsx',
-        '2020Q12_in.xlsx',
-        '2020Q34_in.xlsx',
-        '2021Q12_in.xlsx',
-        '2021Q34_in.xlsx',
+        #'2018Q12_in.xlsx',
+        #'2018Q34_in.xlsx',
+        #'2019Q12_in.xlsx',
+        #'2019Q34_in.xlsx',
+        #'2020Q12_in.xlsx',
+        #'2020Q34_in.xlsx',
+        #'2021Q12_in.xlsx', #bad data
+        #'2021Q34_in.xlsx',
         '2022Q12_in.xlsx',
-        '2022Q34_in.xlsx',
-        '2023Q12_in.xlsx',
-        '2023Q34_in.xlsx',
-        '2024Q12_in.xlsx',
-        '2024Q34_in.xlsx',
-        '2025Q12_in.xlsx',
-        '2025Q3_in.xlsx',
+        #'2022Q34_in.xlsx',
+        #'2023Q12_in.xlsx',
+        #'2023Q34_in.xlsx',
+        #'2024Q12_in.xlsx',
+        #'2024Q34_in.xlsx',
+        #'2025Q12_in.xlsx',
+        #'2025Q3_in.xlsx',
     ]
 elif dataset == 'ready':
     in_file_names = [

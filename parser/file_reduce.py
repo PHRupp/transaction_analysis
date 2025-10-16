@@ -26,7 +26,7 @@ def reduce_section(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     data = []
-    
+
     # column names after 'Invoice Paid' row, and first data row after that
     col_names_row_index = section_row_index + 1
     data_row_index = col_names_row_index + 1
@@ -44,9 +44,20 @@ def reduce_section(
     # Change the invoice column values to NaN if it doesn't follow the Invoice Regex pattern
     inv_col = 'Invoice' if 'Invoice' in cols.values else 'Inv #'
     is_inv = reduced_df[inv_col].str.contains(INVOICE_PATTERN).to_list()
-    inv_convert = {True: False, False: True, np.nan: False}
-    is_inv = [inv_convert[l] for l in is_inv]
-    reduced_df.loc[is_inv, inv_col] = np.nan
+    not_inv = [not (False if np.isnan(l) else True) for l in is_inv]
+    reduced_df.loc[not_inv, inv_col] = np.nan
+    #print(not_inv)
+    print("%d - %d" % (np.sum(not_inv), reduced_df.shape[0]))
+    #print(reduced_df)
+    #exit(0)
+
+    # if all the rows are null invoices, then check the columns to the left
+    if np.sum(not_inv) == reduced_df.shape[0]:
+
+        inv_ind = col_index[[(inv_col == c) for c in cols.values]]
+        print(inv_ind)
+        print(reduced_df.iloc[:, inv_ind-1])
+        exit(0)
 
     # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
     # This should be run before we further filter out rows in reduced_df
