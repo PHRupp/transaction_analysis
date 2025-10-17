@@ -46,18 +46,15 @@ def reduce_section(
     is_inv = reduced_df[inv_col].str.contains(INVOICE_PATTERN).to_list()
     not_inv = [not (False if np.isnan(l) else True) for l in is_inv]
     reduced_df.loc[not_inv, inv_col] = np.nan
-    #print(not_inv)
-    print("%d - %d" % (np.sum(not_inv), reduced_df.shape[0]))
-    #print(reduced_df)
-    #exit(0)
 
     # if all the rows are null invoices, then check the columns to the left
+    # this is a rare occurence
     if np.sum(not_inv) == reduced_df.shape[0]:
 
-        inv_ind = col_index[[(inv_col == c) for c in cols.values]]
-        print(inv_ind)
-        print(reduced_df.iloc[:, inv_ind-1])
-        exit(0)
+        inv_col_ind = [i for i in range(raw_cols.shape[0]) if inv_col == raw_cols.iloc[i]][0]
+        invs = df.loc[data_row_index:(section_end_row_index-1), :].iloc[:, inv_col_ind-1]
+        is_inv = invs.str.contains(INVOICE_PATTERN).to_list()
+        reduced_df.loc[is_inv, inv_col] = invs[is_inv].to_list()
 
     # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
     # This should be run before we further filter out rows in reduced_df

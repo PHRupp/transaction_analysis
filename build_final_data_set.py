@@ -31,19 +31,6 @@ try:
     data_paid = pd.read_csv(paid_data_file)
     data_pickup = pd.read_csv(pickup_data_file)
 
-    print('IN:')
-    print(data_in.shape)
-    print(len(data_in['Invoice'].unique()))
-    print(sum(data_in['Invoice'].isnull()))
-    print(data_in.loc[data_in['Invoice'].isnull(),:])
-    print('PAID:')
-    print(data_paid.shape)
-    print(len(data_paid['Invoice'].unique()))
-    print('PICKUP:')
-    print(data_pickup.shape)
-    print(len(data_pickup['Invoice'].unique()))
-    exit(0)
-
     # merge the data
     data_final = pd.merge(data_in, data_paid, on='Invoice', how='outer', suffixes=('In', 'Paid'))
     data_final = pd.merge(data_final, data_pickup, on='Invoice', how='outer', suffixes=('', 'Pickup'))
