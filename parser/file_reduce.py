@@ -26,7 +26,7 @@ def reduce_section(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     data = []
-    
+
     # column names after 'Invoice Paid' row, and first data row after that
     col_names_row_index = section_row_index + 1
     data_row_index = col_names_row_index + 1
@@ -41,12 +41,30 @@ def reduce_section(
     reduced_df.reset_index(drop=True, inplace=True)
     reduced_df.columns = cols.to_list()
 
+    # Change the invoice column values to NaN if it doesn't follow the Invoice Regex pattern
+    inv_col = 'Invoice' if 'Invoice' in cols.values else 'Inv #'
+    is_inv = reduced_df[inv_col].str.contains(INVOICE_PATTERN).to_list()
+    not_inv = [not (False if np.isnan(l) else True) for l in is_inv]
+    reduced_df.loc[not_inv, inv_col] = np.nan
+
+    # if all the rows are null invoices, then check the columns to the left
+    # this is a rare occurence
+    if np.sum(not_inv) == reduced_df.shape[0]:
+
+        inv_col_ind = [i for i in range(raw_cols.shape[0]) if inv_col == raw_cols.iloc[i]][0]
+        invs = df.loc[data_row_index:(section_end_row_index-1), :].iloc[:, inv_col_ind-1]
+        is_inv = invs.str.contains(INVOICE_PATTERN).to_list()
+        reduced_df.loc[is_inv, inv_col] = invs[is_inv].to_list()
+
     # If the 'Time' column has phone numbers, then the names are over by 1 column to the right
     # This should be run before we further filter out rows in reduced_df
     reduced_df['Name'] = ''
     col_shifted_ind = reduced_df['Time'].str.contains(PARTIAL_PHONE_NUMBER_PATTERN)
     if col_shifted_ind.sum() > 0:
-        reduced_df['Name'] = df.loc[data_row_index:(section_end_row_index-1), 'Unnamed: 3'].to_list()
+        name_rows_ind = col_shifted_ind.to_list()
+        names = df.loc[data_row_index:(section_end_row_index-1), 'Unnamed: 3']
+        name_rows_ind = [False if np.isnan(l) else l for l in name_rows_ind]
+        reduced_df.loc[name_rows_ind, 'Name'] = names[name_rows_ind].to_list()
     else:
 
         # Otherwise, the time column has the names, parse the names out if doesn't match time format
@@ -63,7 +81,7 @@ def reduce_section(
     # keep the strings consistent by having upper case
     reduced_df['Name'] = reduced_df['Name'].str.upper()
 
-    # Drop rows where the date column is empty. other rolumns may have
+    # Drop rows where the date column is empty. other columns may have
     # data, but if date is empty then we should remove the whole row
     # reduce here because it won't work during the clean up phase.
     # this is because the 'Invoice Paid' line will have empty date column
@@ -72,7 +90,7 @@ def reduce_section(
     reduced_df.drop(index=drop_ind, inplace=True)
 
     # Remove lines representing the person who grabbed the data
-    for name in ['IAN', 'NANDY', 'NANDANIE', 'Shashank']:
+    for name in ['IAN', 'NANDY', 'NANDANIE', 'Shashank', 'Total All']:
         ind_delete = reduced_df['Date'] == name
         reduced_df.drop(reduced_df.loc[ind_delete,:].index, inplace=True)
 
@@ -86,18 +104,21 @@ def reduce_section(
     return reduced_df
 
 
-def reduce_file(in_file: str) -> List[pd.DataFrame]:
+def reduce_file(in_file: str, dataset: str = 'paid') -> List[pd.DataFrame]:
     
     data_frames: List[pd.DataFrame] = []
 
     raw_df = pd.read_excel(in_file)
-
+    
     # Clean up the file otherwise the weird line skips are annoying
+    # remove lines that are empty
     raw_df.dropna(how='all', inplace=True, ignore_index=True)
 
+    section = section_invoice[dataset]
+
     # Some of the data is shifted right
-    section_row_indices1 = np.where(raw_df[title_col1] == section_invoice_paid)[0]
-    section_row_indices2 = np.where(raw_df[title_col2] == section_invoice_paid)[0]
+    section_row_indices1 = np.where(raw_df[title_col1] == section)[0]
+    section_row_indices2 = np.where(raw_df[title_col2] == section)[0]
     section_end_row_indices = np.where(raw_df[run_date_col] == section_end_run_date)[0]
     section_row_indices = np.concatenate( (section_row_indices1, section_row_indices2))
     section_row_indices.sort()
